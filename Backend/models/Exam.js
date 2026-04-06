@@ -46,6 +46,9 @@ const ExamSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  syllabusPdf: {
+    type: String
+  },
   syllabus: [TopicSchema],
   mockTests: [MockTestSchema],
   currentAffairs: [CurrentAffairSchema]

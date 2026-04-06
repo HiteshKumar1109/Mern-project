@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import './TestDetail.css';
 
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 function TestDetail() {
   const { testId } = useParams();
@@ -21,7 +21,7 @@ function TestDetail() {
 
   const fetchTest = async () => {
     try {
-      const response = await axios.get(`${API_URL}/tests/${testId}`);
+      const response = await axios.get(`${apiUrl}/tests/${testId}`);
       setTest(response.data);
     } catch (error) {
       toast.error('Failed to load test');

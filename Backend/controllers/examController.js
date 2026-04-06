@@ -74,8 +74,40 @@ const createOrUpdateExam = async (req, res) => {
   }
 };
 
+// @desc    Upload syllabus PDF for an exam
+// @route   POST /api/exams/:id/syllabus-pdf
+// @access  Private/Admin
+const uploadSyllabusPdf = async (req, res) => {
+  try {
+    const examId = req.params.id;
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    // Path to save to DB (relative path)
+    const filePath = `/uploads/syllabuses/${req.file.filename}`;
+
+    const exam = await Exam.findById(examId);
+    if (!exam) {
+      return res.status(404).json({ message: 'Exam not found' });
+    }
+
+    exam.syllabusPdf = filePath;
+    await exam.save();
+
+    res.json({ 
+      message: 'Syllabus PDF uploaded successfully', 
+      syllabusPdf: filePath 
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error during upload', error: error.message });
+  }
+};
+
 module.exports = {
   getExamByType,
   getAllExams,
-  createOrUpdateExam
+  createOrUpdateExam,
+  uploadSyllabusPdf
 };

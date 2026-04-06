@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import './TakeTest.css';
 
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 function TakeTest() {
   const { testId } = useParams();
@@ -34,7 +34,7 @@ function TakeTest() {
 
   const fetchTest = async () => {
     try {
-      const response = await axios.get(`${API_URL}/tests/${testId}`);
+      const response = await axios.get(`${apiUrl}/tests/${testId}`);
       setTest(response.data);
       setTimeLeft(response.data.duration * 60); // Convert to seconds
     } catch (error) {
@@ -59,7 +59,7 @@ function TakeTest() {
     try {
       const timeTaken = (test.duration * 60) - timeLeft;
       const response = await axios.post(
-        `${API_URL}/attempts`,
+        `${apiUrl}/attempts`,
         {
           test_id: testId,
           answers: answers,

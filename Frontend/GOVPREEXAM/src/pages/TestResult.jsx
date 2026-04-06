@@ -5,7 +5,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 function TestResult() {
   const { attemptId } = useParams();
@@ -19,7 +19,7 @@ function TestResult() {
 
   const fetchResult = async () => {
     try {
-      const response = await axios.get(`${API_URL}/attempts/${attemptId}`, {
+      const response = await axios.get(`${apiUrl}/attempts/${attemptId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setData(response.data);

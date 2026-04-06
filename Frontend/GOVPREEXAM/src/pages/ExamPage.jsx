@@ -12,6 +12,7 @@ function ExamPage() {
   const [activeTab, setActiveTab] = useState('syllabus');
   const [exam, setExam] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [realTests, setRealTests] = useState([]);
 
   useEffect(() => {
     const fetchExamData = async () => {
@@ -19,6 +20,14 @@ function ExamPage() {
         setLoading(true);
         const response = await axios.get(`${apiUrl}/exams/${examType}`);
         setExam(response.data);
+        
+        // Fetch real tests for this exam
+        try {
+          const testRes = await axios.get(`${apiUrl}/tests?exam_type=${examType}`);
+          setRealTests(testRes.data.tests || []);
+        } catch(e) {
+          console.error('Error fetching real tests');
+        }
       } catch (error) {
         console.error('Error fetching exam data:', error);
         toast.error('Failed to load exam data');
@@ -50,8 +59,8 @@ function ExamPage() {
   }
 
   const syllabusData = exam.syllabus || [];
-  const mockTestsData = exam.mockTests || [];
   const currentAffairsData = exam.currentAffairs || [];
+  const baseUrl = apiUrl.replace(/\/api\/?$/, '');
 
   return (
     <div className="page-container" style={{ paddingBottom: '100px' }}>
@@ -121,6 +130,11 @@ function ExamPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
                     <h2 style={{ fontSize: '2rem' }}>Comprehensive Syllabus</h2>
                     <div style={{ flex: 1, height: '1px', background: 'var(--glass-border)' }}></div>
+                    {exam.syllabusPdf && (
+                      <a href={`${baseUrl}${exam.syllabusPdf}`} target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <i className="fas fa-file-pdf"></i> Download PDF
+                      </a>
+                    )}
                   </div>
                   
                   {syllabusData.length === 0 ? (
@@ -159,29 +173,29 @@ function ExamPage() {
                     <Link to="/mock-tests" className="btn btn-primary btn-sm">View All</Link>
                   </div>
 
-                  {mockTestsData.length === 0 ? (
+                  {realTests.length === 0 ? (
                     <div className="glass-card" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>
                       No mock tests available for {exam.name} yet.
                     </div>
                   ) : (
                     <div className="grid grid-2" style={{ gap: '24px' }}>
-                      {mockTestsData.map((test, idx) => (
-                        <div key={test._id || idx} className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      {realTests.map((test, idx) => (
+                        <div key={test.id || test._id || idx} className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <span className="badge badge-primary">Full Length</span>
-                            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{test.date}</span>
+                            <span className="badge badge-primary">{test.level || 'Full Length'}</span>
+                            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{new Date(test.createdAt).toLocaleDateString() || 'Recent'}</span>
                           </div>
                           <h3 style={{ fontSize: '1.2rem', lineHeight: '1.4' }}>{test.title}</h3>
                           <div style={{ display: 'flex', gap: '16px', borderTop: '1px solid var(--glass-border)', borderBottom: '1px solid var(--glass-border)', padding: '16px 0' }}>
                             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '14px' }}>
-                              <i className="fas fa-clock" style={{ color: 'var(--primary)' }}></i> {test.duration}
+                              <i className="fas fa-clock" style={{ color: 'var(--primary)' }}></i> {test.duration} min
                             </div>
                             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '14px' }}>
-                              <i className="fas fa-list-ol" style={{ color: 'var(--primary)' }}></i> {test.questions} Qs
+                              <i className="fas fa-list-ol" style={{ color: 'var(--primary)' }}></i> {test.questions ? test.questions.length : 0} Qs
                             </div>
                           </div>
-                          <Link to={`/take-test/${test._id || test.id || idx}`} className="btn btn-outline" style={{ marginTop: 'auto', justifyContent: 'center' }}>
-                            Start Test
+                          <Link to={`/test/${test.id || test._id}`} className="btn btn-outline" style={{ marginTop: 'auto', justifyContent: 'center' }}>
+                            View Details
                           </Link>
                         </div>
                       ))}

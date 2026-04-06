@@ -5,7 +5,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import './MockTests.css';
 
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 function MockTests() {
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +24,7 @@ function MockTests() {
       if (filters.exam_type) params.append('exam_type', filters.exam_type);
       if (filters.level) params.append('level', filters.level);
       
-      const response = await axios.get(`${API_URL}/tests?${params}`);
+      const response = await axios.get(`${apiUrl}/tests?${params}`);
       setTests(response.data.tests);
     } catch (error) {
       toast.error('Failed to load tests');
@@ -143,7 +143,7 @@ function MockTests() {
             <div className="tests-grid grid grid-3">
               {tests.map((test, index) => (
                 <motion.div
-                  key={test.id}
+                  key={test._id}
                   initial={{ y: 30, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: index * 0.1 }}
@@ -185,7 +185,7 @@ function MockTests() {
                   </div>
                   <div className="test-actions">
                     <Link
-                      to={`/test/${test.id}`}
+                      to={`/test/${test._id}`}
                       className="btn btn-primary btn-sm"
                       data-testid={`view-test-${index}`}
                     >
@@ -193,7 +193,7 @@ function MockTests() {
                       Start Test
                     </Link>
                     <Link
-                      to={`/test/${test.id}`}
+                      to={`/test/${test._id}`}
                       className="btn btn-secondary btn-sm"
                     >
                       View Details

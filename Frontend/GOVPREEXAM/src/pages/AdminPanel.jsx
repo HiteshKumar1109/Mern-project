@@ -10,12 +10,14 @@ function AdminPanel() {
   const { token } = useAuth();
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
+  const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('stats');
 
   useEffect(() => {
     fetchStats();
     fetchUsers();
+    fetchExams();
   }, []);
 
   const fetchStats = async () => {
@@ -39,6 +41,35 @@ function AdminPanel() {
       toast.error('Failed to load users');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchExams = async () => {
+    try {
+      const response = await axios.get(`${apiUrl}/exams`);
+      setExams(response.data);
+    } catch (error) {
+      toast.error('Failed to load exams');
+    }
+  };
+
+  const handleFileUpload = async (examId, file) => {
+    if (!file) return;
+    
+    const formData = new FormData();
+    formData.append('pdf', file);
+    
+    try {
+      const toastId = toast.loading('Uploading PDF...');
+      const response = await axios.post(`${apiUrl}/exams/${examId}/syllabus-pdf`, formData, {
+        headers: { 
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`
+        }
+      });
+      toast.success(response.data.message, { id: toastId });
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to upload PDF');
     }
   };
 
@@ -114,6 +145,20 @@ function AdminPanel() {
               >
                 Users ({users.length})
               </button>
+              <button
+                onClick={() => setActiveTab('exams')}
+                style={{
+                  padding: '12px 0',
+                  background: 'none',
+                  border: 'none',
+                  borderBottom: activeTab === 'exams' ? '2px solid var(--primary)' : '2px solid transparent',
+                  color: activeTab === 'exams' ? 'var(--primary)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                Exams
+              </button>
             </div>
           </div>
 
@@ -154,6 +199,45 @@ function AdminPanel() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'exams' && (
+            <div>
+              <h3 style={{ marginBottom: '24px' }}>Exam Management</h3>
+              <div className="grid grid-2" style={{ gap: '24px' }}>
+                {exams.map((exam) => (
+                  <div key={exam._id} className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: `linear-gradient(135deg, ${exam.color}33, ${exam.color}11)`, color: exam.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
+                        <i className={`fas ${exam.icon}`}></i>
+                      </div>
+                      <div>
+                        <h4 style={{ fontSize: '1.2rem', margin: 0 }}>{exam.name}</h4>
+                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{exam.examType}</span>
+                      </div>
+                    </div>
+                    
+                    <div style={{ marginTop: 'auto', borderTop: '1px solid var(--glass-border)', paddingTop: '16px' }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-secondary)' }}>Upload Syllabus PDF</label>
+                      <input 
+                        type="file" 
+                        accept="application/pdf"
+                        onChange={(e) => handleFileUpload(exam._id, e.target.files[0])}
+                        style={{
+                          width: '100%',
+                          padding: '8px',
+                          background: 'rgba(0,0,0,0.2)',
+                          border: '1px dashed var(--glass-border)',
+                          borderRadius: '8px',
+                          color: 'var(--text)',
+                          cursor: 'pointer'
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
